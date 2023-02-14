@@ -1,27 +1,52 @@
-import React, { useState } from 'react';
-import ReactQuill from 'react-quill';
+import React, { useState, useMemo } from 'react';
 import 'react-quill/dist/quill.snow.css';
 import styled from 'styled-components';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 function App() {
 	const [value, setValue] = useState('');
 	const [fileTitle, setFileTitle] = useState('');
 
+	const defaultStyleElement = useMemo(
+		() => `<style>
+    table, tr, td {
+        border: 1px solid #000;
+		border-collapse: collapse;   
+    }
+	td {
+		padding: 8px;
+	}
+</style>`,
+		[],
+	);
+
 	return (
 		<PageContainer>
 			<div>
-				<h2>약관 입력</h2>
-				<StyledReactQuill
-					theme="snow"
-					value={value}
-					onChange={setValue}
-					onChangeSelection={(e) => {
-						console.log(e);
+				<h2 className="title">약관 입력</h2>
+				<CKEditor
+					editor={ClassicEditor}
+					data={value}
+					onReady={(editor) => {
+						// You can store the "editor" and use when it is needed.
+						console.log('Editor is ready to use!', editor);
+					}}
+					onChange={(event, editor) => {
+						const data = editor.getData();
+						console.log({ event, editor, data });
+						setValue(data);
+					}}
+					onBlur={(event, editor) => {
+						console.log('Blur.', editor);
+					}}
+					onFocus={(event, editor) => {
+						console.log('Focus.', editor);
 					}}
 				/>
 			</div>
 			<div>
-				<h2>HTML code result</h2>
+				<h2 className="title">HTML code result</h2>
 				<input
 					onChange={(e) => {
 						setFileTitle(e.target.value);
@@ -29,7 +54,9 @@ function App() {
 					placeholder="파일 제목 입력(기본: 약관파일)"
 				/>
 				<a
-					href={`data:text/html;charset=utf-8, ${encodeURIComponent(value)}`}
+					href={`data:text/html;charset=utf-8, ${encodeURIComponent(
+						defaultStyleElement + value,
+					)}`}
 					download={`${fileTitle ?? '약관파일'}.html`}
 				>
 					HTML 파일 다운로드 (클릭)
@@ -45,7 +72,7 @@ const PageContainer = styled.div`
 	gap: 24px;
 	padding: 20px;
 
-	h2 {
+	.title {
 		font-size: 24px;
 		font-weight: 700;
 		margin-bottom: 12px;
@@ -63,29 +90,10 @@ const PageContainer = styled.div`
 		text-decoration: none;
 		color: #000;
 	}
-`;
 
-const StyledReactQuill = styled(ReactQuill)`
-	&.quill {
-		height: 100%;
-	}
-	.ql-toolbar {
-		position: sticky;
-		top: 0;
-		z-index: 9999;
-		background: #fff;
-	}
-	.ql-container {
+	.ck-content {
 		min-height: 500px;
 		max-height: 500px;
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-	}
-	.ql-editor {
-		flex: 1;
-		overflow-y: auto;
-		width: 100%;
 	}
 `;
 
